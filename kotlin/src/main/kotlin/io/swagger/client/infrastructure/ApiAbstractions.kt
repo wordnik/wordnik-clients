@@ -1,8 +1,8 @@
 package io.swagger.client.infrastructure
 
-typealias MultiValueMap = Map<String,List<String>>
+typealias MultiValueMap = Map<String, List<String>>
 
-fun collectionDelimiter(collectionFormat: String) = when(collectionFormat) {
+fun collectionDelimiter(collectionFormat: String) = when (collectionFormat) {
     "csv" -> ","
     "tsv" -> "\t"
     "pipes" -> "|"
@@ -12,9 +12,9 @@ fun collectionDelimiter(collectionFormat: String) = when(collectionFormat) {
 
 val defaultMultiValueConverter: (item: Any?) -> String = { item -> "$item" }
 
-fun <T: Any?> toMultiValue(items: List<T>, collectionFormat: String, map: (item: Any?) -> String = defaultMultiValueConverter): List<String> {
-    return when(collectionFormat) {
+fun <T : Any?> toMultiValue(items: List<T>, collectionFormat: String, map: (item: Any?) -> String = defaultMultiValueConverter): List<String> {
+    return when (collectionFormat) {
         "multi" -> items.map(map)
-        else -> listOf(items.map(map).joinToString(separator = collectionDelimiter(collectionFormat)))
+        else -> listOf(items.joinToString(separator = collectionDelimiter(collectionFormat), transform = map))
     }
 }

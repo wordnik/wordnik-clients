@@ -12,7 +12,7 @@ open class ApiClient(val baseUrl: String) {
         protected val XmlMediaType = "application/xml"
 
         @JvmStatic
-        val client : OkHttpClient = OkHttpClient()
+        val client: OkHttpClient = OkHttpClient()
 
         @JvmStatic
         var defaultHeaders: Map<String, String> by ApplicationDelegates.setOnce(mapOf(ContentType to JsonMediaType, Accept to JsonMediaType))
@@ -22,39 +22,40 @@ open class ApiClient(val baseUrl: String) {
     }
 
     inline protected fun <reified T> requestBody(content: T, mediaType: String = JsonMediaType): RequestBody {
-        if(content is File) {
-            return RequestBody.create(
+        when {
+            content is File -> return RequestBody.create(
                     MediaType.parse(mediaType), content
             )
-        } else if(mediaType == FormDataMediaType) {
-            var builder = FormBody.Builder()
-            // content's type *must* be Map<String, Any>
-            @Suppress("UNCHECKED_CAST")
-            (content as Map<String,String>).forEach { key, value ->
-                builder = builder.add(key, value)
+            mediaType == FormDataMediaType -> {
+                var builder = FormBody.Builder()
+                // content's type *must* be Map<String, Any>
+                @Suppress("UNCHECKED_CAST")
+                (content as Map<String, String>).forEach { key, value ->
+                    builder = builder.add(key, value)
+                }
+                return builder.build()
             }
-            return builder.build()
-        }  else if(mediaType == JsonMediaType) {
-            return RequestBody.create(
+            mediaType == JsonMediaType -> return RequestBody.create(
                     MediaType.parse(mediaType), Serializer.moshi.adapter(T::class.java).toJson(content)
             )
-        } else if (mediaType == XmlMediaType) {
-            TODO("xml not currently supported.")
+            mediaType == XmlMediaType -> TODO("xml not currently supported.")
         }
+
+        // TODO: this should be extended with other serializers
 
         // TODO: this should be extended with other serializers
         TODO("requestBody currently only supports JSON body and File body.")
     }
 
-    inline protected fun <reified T: Any?> responseBody(body: ResponseBody?, mediaType: String = JsonMediaType): T? {
-        if(body == null) return null
-        return when(mediaType) {
+    inline protected fun <reified T : Any?> responseBody(body: ResponseBody?, mediaType: String = JsonMediaType): T? {
+        if (body == null) return null
+        return when (mediaType) {
             JsonMediaType -> Serializer.moshi.adapter(T::class.java).fromJson(body.source())
             else -> TODO()
         }
     }
 
-    inline protected fun <reified T: Any?> request(requestConfig: RequestConfig, body : Any? = null): ApiInfrastructureResponse<T?> {
+    inline protected fun <reified T : Any?> request(requestConfig: RequestConfig, body: Any? = null): ApiInfrastructureResponse<T?> {
         val httpUrl = HttpUrl.parse(baseUrl) ?: throw IllegalStateException("baseUrl is invalid.")
 
         var urlBuilder = httpUrl.newBuilder()
@@ -69,19 +70,19 @@ open class ApiClient(val baseUrl: String) {
         val url = urlBuilder.build()
         val headers = requestConfig.headers + defaultHeaders
 
-        if(headers[ContentType] ?: "" == "") {
-            throw kotlin.IllegalStateException("Missing Content-Type header. This is required.")
+        if (headers[ContentType] ?: "" == "") {
+            throw IllegalStateException("Missing Content-Type header. This is required.")
         }
 
-        if(headers[Accept] ?: "" == "") {
-            throw kotlin.IllegalStateException("Missing Accept header. This is required.")
+        if (headers[Accept] ?: "" == "") {
+            throw IllegalStateException("Missing Accept header. This is required.")
         }
 
         // TODO: support multiple contentType,accept options here.
         val contentType = (headers[ContentType] as String).substringBefore(";").toLowerCase()
         val accept = (headers[Accept] as String).substringBefore(";").toLowerCase()
 
-        var request : Request.Builder =  when (requestConfig.method) {
+        var request: Request.Builder = when (requestConfig.method) {
             RequestMethod.DELETE -> Request.Builder().url(url).delete()
             RequestMethod.GET -> Request.Builder().url(url)
             RequestMethod.HEAD -> Request.Builder().url(url).head()
