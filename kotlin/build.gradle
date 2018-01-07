@@ -1,0 +1,20 @@
+plugins {
+    id "org.jetbrains.kotlin.jvm" version "1.2.10"
+}
+
+group 'io.swagger'
+version '1.0.0'
+
+apply plugin: 'kotlin'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile "com.squareup.moshi:moshi-kotlin:1.5.0"
+    compile "com.squareup.moshi:moshi-adapters:1.5.0"
+    compile "com.squareup.okhttp3:okhttp:3.8.0"
+    testCompile "io.kotlintest:kotlintest:2.0.2"
+}
